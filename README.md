@@ -1,6 +1,6 @@
 # Introduction
 
-polly is a library to help you parse and check rel-alternate-hreflang directives on a page.
+polly is a library to help you parse and check rel-alternate-hreflang annotations on a page.
 
 Using polly you can fetch a page and quickly access information about how many rel-alternate-hreflang entries are on a page, and which countries and languages they cover:
 
@@ -12,7 +12,7 @@ Using polly you can fetch a page and quickly access information about how many r
 You can also check various aspects of a page, see whether the pages it includes in its rel-alternate-hreflang entries point back, or whether there are entries that do not see retrievable (due to 404 or 500 etc. errors:
 
 	print my_page.is_default
-	print my_page.non_reciprocal_pages()
+	print my_page.no_return_tag_pages()
 	print my_page.non_retrievable_pages()
 
 # Using polly
@@ -21,6 +21,10 @@ Simply install it with pip:
 
 	pip install polly
 
+Included with polly is a small script for checking a URL:
+
+	python hreflang-check.py  "https://www.facebook.com/"
+
 # To Do
 
 - handle hreflang via XML sitemap
@@ -28,6 +32,7 @@ Simply install it with pip:
 - cross check with rel-canonical directives
 - cross check with the other language indicators on a page
 - handle script variations (https://support.google.com/webmasters/answer/189077?hl=en)
+- identify cross-domain entries
 
 # Why Polly?
 

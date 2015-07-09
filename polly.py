@@ -191,7 +191,7 @@ class PollyPage(object):
 
         return None
 
-    def non_reciprocal_pages(self, include_x_default=False):
+    def no_return_tag_pages(self, include_x_default=False):
 
         self.fetch_alternate_pages()
         urls = set()
