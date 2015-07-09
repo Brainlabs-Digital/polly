@@ -1,0 +1,5 @@
+language-tags==0.3.2
+lxml==3.4.4
+requests==2.5.3
+six==1.9.0
+wsgiref==0.1.2

@@ -1,0 +1,6 @@
+*.sublime-project
+*.sublime-workspace
+.venv
+*.pyc
+archive
+test.py
