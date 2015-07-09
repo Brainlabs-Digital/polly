@@ -15,6 +15,20 @@ You can also check various aspects of a page, see whether the pages it includes 
 	print my_page.non_reciprocal_pages()
 	print my_page.non_retrievable_pages()
 
+# Using polly
+
+Simply install it with pip:
+
+	pip install polly
+
+# To Do
+
+- handle hreflang via XML sitemap
+- handle hreflang via HTTP headers
+- cross check with rel-canonical directives
+- cross check with the other language indicators on a page
+- handle script variations (https://support.google.com/webmasters/answer/189077?hl=en)
+
 # Why Polly?
 
 Polyglot. Get it?!

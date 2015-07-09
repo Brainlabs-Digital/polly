@@ -7,7 +7,7 @@ setup(
     author='Tom Anthony',
     author_email='tom.anthony@distilled.net',
     url='https://github.com/DistilledLtd/polly',
-    download_url='https://github.com/peterldowns/mypackage/tarball/0.1',
+    download_url='https://github.com/DistilledLtd/polly/tarball/0.1',
     keywords=['hreflang', 'rel-alternate-hreflang'],
     classifiers=[],
 )

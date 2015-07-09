@@ -65,9 +65,9 @@ class PollyPage(object):
         # Extract the region
         # Differentiate between none being specified and one not
         # being recognised
-        region = str(parsed_tag.region.description[0]
-                     if parsed_tag.region else "Unknown"
-                     if len(str(parsed_tag)) > 2 else None)
+        region = (str(parsed_tag.region.description[0])
+                  if parsed_tag.region else "Unknown"
+                  if len(str(parsed_tag)) > 2 else None)
 
         # Return cleaned version of the tag
         return (str(parsed_tag), language, region)
@@ -118,9 +118,9 @@ class PollyPage(object):
             hreflang_value, alternate_url = element_hreflang_value_and_url(element)
             alternate_urls_map[hreflang_value].append(alternate_url)
             self.alternate_languages.add(self.hreflang_value_language(hreflang_value))
-            self.alternate_regions.add(self.hreflang_value_region(hreflang_value))
-
-        self.alternate_regions.remove('None')
+            region = self.hreflang_value_region(hreflang_value)
+            if region:
+                self.alternate_regions.add(region)
 
         self.alternate_urls_map = alternate_urls_map
 
