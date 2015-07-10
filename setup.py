@@ -10,4 +10,9 @@ setup(
     download_url='https://github.com/DistilledLtd/polly/tarball/0.3',
     keywords=['hreflang', 'rel-alternate-hreflang'],
     classifiers=[],
+    install_requires=[
+        'language-tags',
+        'lxml',
+        'requests'
+    ]
 )
