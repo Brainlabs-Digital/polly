@@ -4,3 +4,4 @@
 *.pyc
 archive
 test.py
+dist
