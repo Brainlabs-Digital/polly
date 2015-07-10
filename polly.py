@@ -138,6 +138,8 @@ class PollyPage(object):
         # Loop each of the URLs from the current page's hreflang
         # entries and create PollyPage objects to fetch and parse them.
         for url in self.alternate_urls_set():
+            # We resolve relative URLs. This is permitted (see 'mistake #2':
+            # http://googlewebmastercentral.blogspot.co.uk/2013/04/5-common-mistakes-with-relcanonical.html)
             resolved_url = urljoin(self.base_url, url)
             self.alternate_pages[url] = PollyPage(resolved_url,
                                                   allow_underscore=self.allow_underscore)

@@ -9,7 +9,7 @@ Using polly you can fetch a page and quickly access information about how many r
 	print my_page.languages
 	print my_page.regions
 
-You can also check various aspects of a page, see whether the pages it includes in its rel-alternate-hreflang entries point back, or whether there are entries that do not see retrievable (due to 404 or 500 etc. errors:
+You can also check various aspects of a page, see whether the pages it includes in its rel-alternate-hreflang entries point back, or whether there are entries that do not see retrievable (due to 404 or 500 etc. errors):
 
 	print my_page.is_default
 	print my_page.no_return_tag_pages()
