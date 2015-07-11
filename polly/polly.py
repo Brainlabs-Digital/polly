@@ -16,7 +16,9 @@ class PollyPage(object):
 
     def __init__(self, url, allow_underscore=False):
         self.base_url = url
-        self.alternate_urls_map = {}
+        self.hreflang_entries = {}
+        self.errors_for_key = {}
+        self.errors_for_url = {}
         self.alternate_pages = {}
         self.alternate_languages = set()
         self.alternate_regions = set()
@@ -32,8 +34,8 @@ class PollyPage(object):
         return self.base_url
 
     @property
-    def hreflang_values(self):
-        return sorted(self.alternate_urls_map.keys())
+    def hreflang_keys(self):
+        return sorted(self.hreflang_entries.keys())
 
     @property
     def languages(self):
@@ -90,7 +92,7 @@ class PollyPage(object):
         """
 
         # Clear the current internal links
-        self.alternate_urls_map = {}
+        self.hreflang_entries = {}
 
         # Grab the page and pull out the hreflang <link> elements
         r = requests.get(self.base_url)
@@ -113,16 +115,16 @@ class PollyPage(object):
             return formatted_hreflang_value, alternate_url
 
         # group the links by country code
-        alternate_urls_map = defaultdict(list)
+        hreflang_entries = defaultdict(list)
         for element in elements:
             hreflang_value, alternate_url = element_hreflang_value_and_url(element)
-            alternate_urls_map[hreflang_value].append(alternate_url)
+            hreflang_entries[hreflang_value].append(alternate_url)
             self.alternate_languages.add(self.hreflang_value_language(hreflang_value))
             region = self.hreflang_value_region(hreflang_value)
             if region:
                 self.alternate_regions.add(region)
 
-        self.alternate_urls_map = alternate_urls_map
+        self.hreflang_entries = dict(hreflang_entries)
 
     def fetch_alternate_pages(self):
         """ Iterate over all the URLs we have encountered on the current
@@ -137,59 +139,100 @@ class PollyPage(object):
 
         # Loop each of the URLs from the current page's hreflang
         # entries and create PollyPage objects to fetch and parse them.
-        for url in self.alternate_urls_set():
+        for url in self.alternate_urls():
             # We resolve relative URLs. This is permitted (see 'mistake #2':
             # http://googlewebmastercentral.blogspot.co.uk/2013/04/5-common-mistakes-with-relcanonical.html)
             resolved_url = urljoin(self.base_url, url)
             self.alternate_pages[url] = PollyPage(resolved_url,
                                                   allow_underscore=self.allow_underscore)
 
-    def alternate_urls_set(self, include_x_default=True):
+    def detect_errors(self):
 
-        alternate_urls_map = self.alternate_urls_map
+        self.fetch_alternate_pages()
+
+        self.errors_for_key = {}
+        self.errors_for_url = {}
+
+        non_retrievable_pages = list(self.non_retrievable_pages())
+        no_return_tag_pages = list(self.no_return_tag_pages())
+        hreflang_keys_with_mulitple_entries = self.hreflang_keys_with_mulitple_entries
+
+        for key in self.hreflang_keys:
+            self.errors_for_key[key] = {
+                "has_errors": False,
+                "multiple_entries": False
+            }
+
+        for url in self.alternate_urls():
+            self.errors_for_url[url] = {
+                "has_errors": False,
+                "non_retrievable": False,
+                "no_return_tag": False,
+            }
+
+        for key, urls in self.hreflang_entries.iteritems():
+
+            if key in hreflang_keys_with_mulitple_entries:
+                self.errors_for_key[key]['multiple_entries'] = True
+                self.errors_for_key[key]['has_errors'] = True
+
+            for url in urls:
+                if url in non_retrievable_pages:
+                    self.errors_for_url[url]['non_retrievable'] = True
+                    self.errors_for_url[url]['has_errors'] = True
+
+                if url in no_return_tag_pages:
+                    self.errors_for_url[url]['no_return_tag'] = True
+                    self.errors_for_url[url]['has_errors'] = True
+
+    def alternate_urls(self, include_x_default=True):
+        """ Returns a set of all the alternate URLs encountered.
+        """
+
+        hreflang_entries = self.hreflang_entries
 
         if not include_x_default:
-            alternate_urls_map['x-default'] = []
+            hreflang_entries['x-default'] = []
 
         return set(
             link
-            for hreflang_value in alternate_urls_map
-            for link in alternate_urls_map[hreflang_value]
+            for hreflang_value in hreflang_entries
+            for link in hreflang_entries[hreflang_value]
             )
 
     def links_back_to(self, url, include_x_default=False):
 
-        alternative_urls = self.alternate_urls_set(include_x_default=include_x_default)
+        alternative_urls = self.alternate_urls(include_x_default=include_x_default)
 
         return url in alternative_urls
 
     @property
     def is_default(self):
 
-        if 'x-default' in self.alternate_urls_map:
-            return self.base_url in self.alternate_urls_map['x-default']
+        if 'x-default' in self.hreflang_entries:
+            return self.base_url in self.hreflang_entries['x-default']
 
         return False
 
     @property
-    def multiple_defaults(self):
+    def has_multiple_defaults(self):
 
-        if 'x-default' in self.alternate_urls_map:
-            return len(self.alternate_urls_map['x-default']) > 1
+        if 'x-default' in self.hreflang_entries:
+            return len(self.hreflang_entries['x-default']) > 1
 
         return False
 
     @property
-    def hreflang_values_with_mulitple_entries(self):
+    def hreflang_keys_with_mulitple_entries(self):
 
-        hreflang_values = set()
+        hreflang_keys = set()
 
-        for hreflang_value in self.alternate_urls_map:
-            if len(self.alternate_urls_map[hreflang_value]) > 1:
-                hreflang_values.add(hreflang_value)
+        for hreflang_value in self.hreflang_entries:
+            if len(self.hreflang_entries[hreflang_value]) > 1:
+                hreflang_keys.add(hreflang_value)
 
-        if len(hreflang_values) > 0:
-            return hreflang_values
+        if len(hreflang_keys) > 0:
+            return hreflang_keys
 
         return None
 
