@@ -231,10 +231,7 @@ class PollyPage(object):
             if len(self.hreflang_entries[hreflang_value]) > 1:
                 hreflang_keys.add(hreflang_value)
 
-        if len(hreflang_keys) > 0:
-            return hreflang_keys
-
-        return None
+        return hreflang_keys
 
     def no_return_tag_pages(self, include_x_default=False):
 
