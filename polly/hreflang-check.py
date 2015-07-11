@@ -20,6 +20,9 @@ print
 print "Non-retrievable pages:"
 print "\t" + "\n\t".join(test_page.non_retrievable_pages())
 print
+print "Codes with multiple entries:"
+print "\t" + "\n\t".join(test_page.hreflang_keys_with_multiple_entries)
+print
 print "Is this page the default:"
 print "\t" + str(test_page.is_default)
 print

@@ -155,12 +155,14 @@ class PollyPage(object):
 
         non_retrievable_pages = list(self.non_retrievable_pages())
         no_return_tag_pages = list(self.no_return_tag_pages())
-        hreflang_keys_with_mulitple_entries = self.hreflang_keys_with_mulitple_entries
+        hreflang_keys_with_multiple_entries = self.hreflang_keys_with_multiple_entries
 
         for key in self.hreflang_keys:
             self.errors_for_key[key] = {
                 "has_errors": False,
-                "multiple_entries": False
+                "multiple_entries": False,
+                "unknown_language": False,
+                "unknown_region": False
             }
 
         for url in self.alternate_urls():
@@ -172,9 +174,18 @@ class PollyPage(object):
 
         for key, urls in self.hreflang_entries.iteritems():
 
-            if key in hreflang_keys_with_mulitple_entries:
-                self.errors_for_key[key]['multiple_entries'] = True
+            if self.hreflang_value_language(key) == "Unknown":
                 self.errors_for_key[key]['has_errors'] = True
+                self.errors_for_url[url]['unknown_language'] = True
+
+            if self.hreflang_value_region(key) == "Unknown":
+                self.errors_for_key[key]['has_errors'] = True
+                self.errors_for_url[url]['unknown_region'] = True
+
+            if hreflang_keys_with_multiple_entries:
+                if key in hreflang_keys_with_multiple_entries:
+                    self.errors_for_key[key]['multiple_entries'] = True
+                    self.errors_for_key[key]['has_errors'] = True
 
             for url in urls:
                 if url in non_retrievable_pages:
@@ -223,7 +234,7 @@ class PollyPage(object):
         return False
 
     @property
-    def hreflang_keys_with_mulitple_entries(self):
+    def hreflang_keys_with_multiple_entries(self):
 
         hreflang_keys = set()
 
