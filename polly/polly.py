@@ -69,7 +69,7 @@ class PollyPage(object):
         # being recognised
         region = (str(parsed_tag.region.description[0])
                   if parsed_tag.region else "Unknown"
-                  if len(str(parsed_tag)) > 2 else None)
+                  if len(str(parsed_tag)) > 3 else None)
 
         # Return cleaned version of the tag
         return (str(parsed_tag), language, region)
