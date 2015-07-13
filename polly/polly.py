@@ -61,13 +61,15 @@ class PollyPage(object):
         parsed_tag = tags.tag(hreflang_value)
 
         # Extract the language
-        language = str(parsed_tag.language.description[0]
+        language = str(parsed_tag.language.description[0].encode('ascii',
+                                                                 errors='xmlcharrefreplace')
                        if parsed_tag.language else "Unknown")
 
         # Extract the region
         # Differentiate between none being specified and one not
         # being recognised
-        region = (str(parsed_tag.region.description[0])
+        region = (str(parsed_tag.region.description[0].encode('ascii',
+                                                              errors='xmlcharrefreplace'))
                   if parsed_tag.region else "Unknown"
                   if len(str(parsed_tag)) > 3 else None)
 
