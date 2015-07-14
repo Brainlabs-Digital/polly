@@ -1,6 +1,5 @@
 from collections import defaultdict
 from urlparse import urljoin
-from urlparse import urlparse
 
 import lxml.html
 import requests
