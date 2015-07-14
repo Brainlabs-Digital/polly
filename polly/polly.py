@@ -1,5 +1,6 @@
 from collections import defaultdict
 from urlparse import urljoin
+from urlparse import urlparse
 
 import lxml.html
 import requests
@@ -24,7 +25,11 @@ class PollyPage(object):
         self.alternate_regions = set()
         self.allow_underscore = allow_underscore
         self.alternate_pages_fetched = False
-        self.fetch_page()
+
+        try:
+            self.fetch_page()
+        except ValueError:
+            raise
 
     def __repr__(self):
         return self.base_url
@@ -97,10 +102,15 @@ class PollyPage(object):
         self.hreflang_entries = {}
 
         # Grab the page and pull out the hreflang <link> elements
-        r = requests.get(self.base_url)
+        try:
+            r = requests.get(self.base_url)
+        except Exception as e:
+            raise ValueError(str(e))
+
         self.status_code = r.status_code
         if r.status_code != 200:
-            return
+            raise ValueError("HTTP Response Code was not 200.")
+
         tree = lxml.html.fromstring(r.text)
         elements = tree.xpath("//link[@hreflang]")
 
