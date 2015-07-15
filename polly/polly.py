@@ -14,7 +14,14 @@ class PollyPage(object):
         to via those hreflang entries.
     """
 
-    def __init__(self, url, allow_underscore=False):
+    def __init__(self,
+                 url,
+                 allow_underscore=False,
+                 fetch_page=True):
+
+        if url[:4] != "http":
+            url = "http://" + url
+
         self.base_url = url
         self.hreflang_entries = {}
         self.errors_for_key = {}
@@ -26,7 +33,8 @@ class PollyPage(object):
         self.alternate_pages_fetched = False
 
         try:
-            self.fetch_page()
+            if fetch_page:
+                self.fetch_page()
         except ValueError:
             raise
 
@@ -102,7 +110,7 @@ class PollyPage(object):
 
         # Grab the page and pull out the hreflang <link> elements
         try:
-            r = requests.get(self.base_url)
+            r = requests.get(self.base_url, allow_redirects=False)
         except Exception as e:
             raise ValueError(str(e))
 
@@ -155,7 +163,15 @@ class PollyPage(object):
             # http://googlewebmastercentral.blogspot.co.uk/2013/04/5-common-mistakes-with-relcanonical.html)
             resolved_url = urljoin(self.base_url, url)
             self.alternate_pages[url] = PollyPage(resolved_url,
-                                                  allow_underscore=self.allow_underscore)
+                                                  allow_underscore=self.allow_underscore,
+                                                  fetch_page=False)
+
+            # Fetch the pages manually such that the constructor always
+            # returns an object even when there is a problem with the URL.
+            try:
+                self.alternate_pages[url].fetch_page()
+            except:
+                pass
 
     def detect_errors(self):
 
