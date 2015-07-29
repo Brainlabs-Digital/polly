@@ -6,6 +6,7 @@ import requests
 
 from language_tags import tags
 
+
 class PollyPage(object):
     """ A class that contains the functions and structures to
         retrieve and store all of the various aspects of the
@@ -178,6 +179,7 @@ class PollyPage(object):
 
         self.errors_for_key = {}
         self.errors_for_url = {}
+        self.warnings = {}
 
         non_retrievable_pages = list(self.non_retrievable_pages())
         no_return_tag_pages = list(self.no_return_tag_pages())
@@ -189,6 +191,10 @@ class PollyPage(object):
                 "multiple_entries": False,
                 "unknown_language": False,
                 "unknown_region": False
+            }
+
+            self.warnings[key] = {
+                "has_warnings": False
             }
 
         for url in self.alternate_urls():
@@ -203,6 +209,9 @@ class PollyPage(object):
             if self.hreflang_value_language(key) == "Unknown":
                 self.errors_for_key[key]['has_errors'] = True
                 self.errors_for_url[url]['unknown_language'] = True
+
+            if self.hreflang_value_language(key) in self.languages_missing_standalone_entry:
+                self.warnings[key]['has_warnings'] = True
 
             if self.hreflang_value_region(key) == "Unknown":
                 self.errors_for_key[key]['has_errors'] = True
@@ -303,33 +312,26 @@ class PollyPage(object):
     # Splits hreflang_keys into a dictionary containing with hreflang_keys as the keys and a tuple of (language, country) as the value.
 
     @property
-    def associated_country_code(self):
-        associated_country_codes = {}
+    def hreflang_entries_to_tuples(self):
+        hreflang_entries_to_tuples = {}
         for key in self.hreflang_keys:
-            if 8 > len(key) > 2:
-                associated_country_codes[key] = (key[:2], key[3:])
-            else:
-                associated_country_codes[key] = (key, None)
-        return associated_country_codes
+            parsed = self.parse_hreflang_value(key)
+            hreflang_entries_to_tuples[key] = (parsed[1], parsed[2])
 
-    # Takes associated_country_codes and returns a set of the languages with a linked country but without that language by itself
+        return hreflang_entries_to_tuples
+
+    # Takes hreflang_entries and returns a set of the languages with a linked country but without that language by itself
 
     @property
-    def country_without_standalone_language(self):
+    def languages_missing_standalone_entry(self):
         associated = set()
         unassociated = set()
-        for key in self.associated_country_code:
-            if self.associated_country_code[key][1] == None:
-                unassociated.add(self.associated_country_code[key][0])
+        for key, value in self.hreflang_entries_to_tuples.items():
+            if value[1] == None:
+                unassociated.add(value[0])
+            elif value[1] == 'default':
+                continue
             else:
-                associated.add(self.associated_country_code[key][0])
+                associated.add(value[0])
 
         return associated.difference(unassociated)
-
-
-        
-
-
-        
-
-
