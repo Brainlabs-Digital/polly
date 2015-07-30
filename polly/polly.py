@@ -24,8 +24,8 @@ class PollyPage(object):
 
         self.base_url = url
         self.hreflang_entries = {}
-        self.errors_for_key = {}
-        self.errors_for_url = {}
+        self.issues_for_key = {}
+        self.issues_for_url = {}
         self.alternate_pages = {}
         self.alternate_languages = set()
         self.alternate_regions = set()
@@ -177,23 +177,24 @@ class PollyPage(object):
 
         self.fetch_alternate_pages()
 
-        self.errors_for_key = {}
-        self.errors_for_url = {}
+        self.issues_for_key = {}
+        self.issues_for_url = {}
 
         non_retrievable_pages = list(self.non_retrievable_pages())
         no_return_tag_pages = list(self.no_return_tag_pages())
         hreflang_keys_with_multiple_entries = self.hreflang_keys_with_multiple_entries
 
         for key in self.hreflang_keys:
-            self.errors_for_key[key] = {
+            self.issues_for_key[key] = {
                 "has_errors": False,
+                "has_warnings": False,
                 "multiple_entries": False,
                 "unknown_language": False,
                 "unknown_region": False
             }
 
         for url in self.alternate_urls():
-            self.errors_for_url[url] = {
+            self.issues_for_url[url] = {
                 "has_errors": False,
                 "non_retrievable": False,
                 "no_return_tag": False,
@@ -202,26 +203,29 @@ class PollyPage(object):
         for key, urls in self.hreflang_entries.iteritems():
 
             if self.hreflang_value_language(key) == "Unknown":
-                self.errors_for_key[key]['has_errors'] = True
-                self.errors_for_url[url]['unknown_language'] = True
+                self.issues_for_key[key]['has_errors'] = True
+                self.issues_for_url[url]['unknown_language'] = True
+
+            if self.hreflang_value_language(key) in self.languages_missing_standalone_entry:
+                self.issues_for_key[key]['has_warnings'] = True
 
             if self.hreflang_value_region(key) == "Unknown":
-                self.errors_for_key[key]['has_errors'] = True
-                self.errors_for_url[url]['unknown_region'] = True
+                self.issues_for_key[key]['has_errors'] = True
+                self.issues_for_url[url]['unknown_region'] = True
 
             if hreflang_keys_with_multiple_entries:
                 if key in hreflang_keys_with_multiple_entries:
-                    self.errors_for_key[key]['multiple_entries'] = True
-                    self.errors_for_key[key]['has_errors'] = True
+                    self.issues_for_key[key]['multiple_entries'] = True
+                    self.issues_for_key[key]['has_errors'] = True
 
             for url in urls:
                 if url in non_retrievable_pages:
-                    self.errors_for_url[url]['non_retrievable'] = True
-                    self.errors_for_url[url]['has_errors'] = True
+                    self.issues_for_url[url]['non_retrievable'] = True
+                    self.issues_for_url[url]['has_errors'] = True
 
                 if url in no_return_tag_pages:
-                    self.errors_for_url[url]['no_return_tag'] = True
-                    self.errors_for_url[url]['has_errors'] = True
+                    self.issues_for_url[url]['no_return_tag'] = True
+                    self.issues_for_url[url]['has_errors'] = True
 
     def alternate_urls(self, include_x_default=True):
         """ Returns a set of all the alternate URLs encountered.
@@ -300,3 +304,32 @@ class PollyPage(object):
                 urls.add(page.url)
 
         return urls
+
+    @property
+    def hreflang_entries_to_tuples(self):
+        """ Splits hreflang_keys into a dictionary containing with hreflang_keys
+            as the keys and a tuple of (language, region) as the value.
+        """
+        hreflang_entries_to_tuples = {}
+        for key in self.hreflang_keys:
+            formatted_hreflang_value, language, region = self.parse_hreflang_value(key)
+            hreflang_entries_to_tuples[key] = (language, region)
+
+        return hreflang_entries_to_tuples
+
+    @property
+    def languages_missing_standalone_entry(self):
+        """ Takes hreflang_entries and returns a set of the languages with a
+            linked country but without that language by itself.
+        """
+        associated = set()
+        unassociated = set()
+        for key, value in self.hreflang_entries_to_tuples.items():
+            if not value[1]:
+                unassociated.add(value[0])
+            elif value[1] == 'default':
+                continue
+            else:
+                associated.add(value[0])
+
+        return associated.difference(unassociated)
