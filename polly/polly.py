@@ -225,7 +225,7 @@ class PollyPage(object):
             self.issues_for_url[url] = {
                 "has_errors": False,
                 "non_retrievable": False,
-                "no_return_tag": False
+                "no_return_tag": False,
             }
 
         for key, urls in self.hreflang_entries.iteritems():
