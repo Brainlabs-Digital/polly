@@ -1,5 +1,6 @@
 from collections import defaultdict
 from urlparse import urljoin
+from http_parse import http_headers_to_dict
 
 import lxml.html
 import requests
@@ -23,7 +24,10 @@ class PollyPage(object):
             url = "http://" + url
 
         self.base_url = url
+        self.headers = {}
         self.hreflang_entries = {}
+        self.hreflang_entries_from_html = {}
+        self.hreflang_entries_from_http = {}
         self.issues_for_key = {}
         self.issues_for_url = {}
         self.alternate_pages = {}
@@ -111,6 +115,7 @@ class PollyPage(object):
         # Grab the page and pull out the hreflang <link> elements
         try:
             r = requests.get(self.base_url, allow_redirects=False)
+            self.headers = r.headers
         except Exception as e:
             raise ValueError(str(e))
 
@@ -143,6 +148,29 @@ class PollyPage(object):
             if region:
                 self.alternate_regions.add(region)
 
+        self.hreflang_entries_from_html = dict(hreflang_entries)
+        self.get_http_headers()
+        self.combine_sources()
+
+    def get_http_headers(self):
+        http_headers = defaultdict(list)
+        for headers, values in http_headers_to_dict(self.headers).iteritems():
+            http_headers[self.format_hreflang_value(headers)].append(values)
+            self.alternate_languages.add(self.hreflang_value_language(headers))
+            region = self.hreflang_value_region(headers)
+            if region:
+                self.alternate_regions.add(region)
+        self.hreflang_entries_from_http = dict(http_headers)
+
+    def combine_sources(self):
+        hreflang_entries = defaultdict(set)
+        html_hreflangs = self.hreflang_entries_from_html
+        http_hreflangs = self.hreflang_entries_from_http
+        for hreflang_value, urls in html_hreflangs.iteritems():
+            hreflang_entries[hreflang_value].update(urls)
+        for hreflang_value, urls in http_hreflangs.iteritems():
+            hreflang_entries[hreflang_value].update(urls)
+        
         self.hreflang_entries = dict(hreflang_entries)
 
     def fetch_alternate_pages(self):
