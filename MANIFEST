@@ -3,4 +3,5 @@ setup.cfg
 setup.py
 polly/__init__.py
 polly/hreflang-check.py
+polly/http_parse.py
 polly/polly.py
