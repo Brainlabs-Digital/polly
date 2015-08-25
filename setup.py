@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
     name='polly',
     packages=['polly'],
-    version='0.5.9',
+    version='0.6.0',
     description='A library for parsing and validating rel-alternate-hreflang entries on a page.',
     author='Tom Anthony',
     author_email='tom.anthony@distilled.net',
