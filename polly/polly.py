@@ -18,7 +18,8 @@ class PollyPage(object):
     def __init__(self,
                  url,
                  allow_underscore=False,
-                 fetch_page=True):
+                 fetch_page=True,
+                 fuzzy_match_trailing_slash=True):
 
         if url[:4] != "http":
             url = "http://" + url
@@ -35,6 +36,7 @@ class PollyPage(object):
         self.alternate_regions = set()
         self.allow_underscore = allow_underscore
         self.alternate_pages_fetched = False
+        self.fuzzy_match_trailing_slash = fuzzy_match_trailing_slash
 
         try:
             if fetch_page:
@@ -170,7 +172,7 @@ class PollyPage(object):
             hreflang_entries[hreflang_value].update(urls)
         for hreflang_value, urls in http_hreflangs.iteritems():
             hreflang_entries[hreflang_value].update(urls)
-        
+
         self.hreflang_entries = dict(hreflang_entries)
 
     def fetch_alternate_pages(self):
@@ -274,7 +276,16 @@ class PollyPage(object):
 
         alternative_urls = self.alternate_urls(include_x_default=include_x_default)
 
-        return url in alternative_urls
+        if self.fuzzy_match_trailing_slash:
+            if url[-1] == '/':
+                alternate_base_url = url[:-1]
+            elif url[-1] != '/':
+                alternate_base_url = url+'/'
+
+            return url in alternative_urls or alternate_base_url in alternative_urls
+
+        else:
+            return url in alternative_urls
 
     @property
     def is_default(self):
