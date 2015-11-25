@@ -19,7 +19,7 @@ class PollyPage(object):
                  url,
                  allow_underscore=False,
                  fetch_page=True,
-                 fuzzy_match_trailing_slash=False):
+                 fuzzy_match_trailing_slash=True):
 
         if url[:4] != "http":
             url = "http://" + url
@@ -272,16 +272,20 @@ class PollyPage(object):
             for link in hreflang_entries[hreflang_value]
             )
 
-    def links_back_to(self, url, fuzzy_match_trailing_slash, include_x_default=False):
+    def links_back_to(self, url, include_x_default=False):
 
         alternative_urls = self.alternate_urls(include_x_default=include_x_default)
 
-        if url[-1] == '/':
-            alternate_base_url = url[:-1]
-        elif url[-1] != '/':
-            alternate_base_url = url+'/'
+        if self.fuzzy_match_trailing_slash:
+            if url[-1] == '/':
+                alternate_base_url = url[:-1]
+            elif url[-1] != '/':
+                alternate_base_url = url+'/'
 
-        return url in alternative_urls or alternate_base_url in alternative_urls
+            return url in alternative_urls or alternate_base_url in alternative_urls
+
+        else:
+            return url in alternative_urls
 
     @property
     def is_default(self):
@@ -320,8 +324,7 @@ class PollyPage(object):
             if url == self.base_url:
                 continue
 
-            if not page.links_back_to(self.base_url, include_x_default=include_x_default,
-                fuzzy_match_trailing_slash=self.fuzzy_match_trailing_slash):
+            if not page.links_back_to(self.base_url, include_x_default=include_x_default):
                 urls.add(page.url)
 
         return urls
