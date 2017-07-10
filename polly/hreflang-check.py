@@ -41,10 +41,10 @@ print
 
 print "Errors by hreflang_key:"
 for hreflang_key in test_page.hreflang_keys:
-    print "\t" + hreflang_key + " = " + str(test_page.errors_for_key[hreflang_key])
+    print "\t" + hreflang_key + " = " + str(test_page.issues_for_key[hreflang_key]['has_errors'])
 print
 
 print "Errors by url:"
 for url in test_page.alternate_urls():
-    print "\t" + url + " = " + str(test_page.errors_for_url[url])
+    print "\t" + url + " = " + str(test_page.issues_for_url[url]['has_errors'] )
 print
