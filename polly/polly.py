@@ -95,7 +95,8 @@ class PollyPage(object):
         return (str(parsed_tag), language, region)
 
     def format_hreflang_value(self, hreflang_value):
-        formatted_hreflang_value, l, r = self.parse_hreflang_value(hreflang_value)
+        formatted_hreflang_value, l, r = self.parse_hreflang_value(
+            hreflang_value)
         return formatted_hreflang_value
 
     def hreflang_value_language(self, hreflang_value):
@@ -116,7 +117,7 @@ class PollyPage(object):
 
         # Grab the page and pull out the hreflang <link> elements
         try:
-            r = requests.get(self.base_url, allow_redirects=False)
+            r = requests.get(self.base_url, allow_redirects=False, timeout=5)
             self.headers = r.headers
         except Exception as e:
             raise ValueError(str(e))
@@ -136,16 +137,19 @@ class PollyPage(object):
             language_code = element.get('hreflang', '')
             alternate_url = element.get('href', '')
 
-            formatted_hreflang_value = self.format_hreflang_value(language_code)
+            formatted_hreflang_value = self.format_hreflang_value(
+                language_code)
 
             return formatted_hreflang_value, alternate_url
 
         # group the links by country code
         hreflang_entries = defaultdict(list)
         for element in elements:
-            hreflang_value, alternate_url = element_hreflang_value_and_url(element)
+            hreflang_value, alternate_url = element_hreflang_value_and_url(
+                element)
             hreflang_entries[hreflang_value].append(alternate_url)
-            self.alternate_languages.add(self.hreflang_value_language(hreflang_value))
+            self.alternate_languages.add(
+                self.hreflang_value_language(hreflang_value))
             region = self.hreflang_value_region(hreflang_value)
             if region:
                 self.alternate_regions.add(region)
@@ -270,17 +274,18 @@ class PollyPage(object):
             link
             for hreflang_value in hreflang_entries
             for link in hreflang_entries[hreflang_value]
-            )
+        )
 
     def links_back_to(self, url, include_x_default=False):
 
-        alternative_urls = self.alternate_urls(include_x_default=include_x_default)
+        alternative_urls = self.alternate_urls(
+            include_x_default=include_x_default)
 
         if self.fuzzy_match_trailing_slash:
             if url[-1] == '/':
                 alternate_base_url = url[:-1]
             elif url[-1] != '/':
-                alternate_base_url = url+'/'
+                alternate_base_url = url + '/'
 
             return url in alternative_urls or alternate_base_url in alternative_urls
 
@@ -351,7 +356,8 @@ class PollyPage(object):
         """
         hreflang_entries_to_tuples = {}
         for key in self.hreflang_keys:
-            formatted_hreflang_value, language, region = self.parse_hreflang_value(key)
+            formatted_hreflang_value, language, region = self.parse_hreflang_value(
+                key)
             hreflang_entries_to_tuples[key] = (language, region)
 
         return hreflang_entries_to_tuples
